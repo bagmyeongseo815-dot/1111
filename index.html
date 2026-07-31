@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>포켓몬 도감 V2</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#1f2937;
+    color:white;
+    text-align:center;
+}
+
+header{
+    background:#ef5350;
+    padding:15px;
+    font-size:30px;
+    font-weight:bold;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:20px;
+}
+
+input{
+    width:250px;
+    padding:10px;
+    font-size:18px;
+    border:none;
+    border-radius:10px;
+    margin:10px;
+}
+
+button{
+    padding:10px 18px;
+    font-size:17px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    background:#42a5f5;
+    color:white;
+    margin:5px;
+}
+
+button:hover{
+    background:#1e88e5;
+}
+
+.card{
+    margin-top:20px;
+    background:#374151;
+    padding:20px;
+    border-radius:20px;
+}
+
+#pokemonImage{
+    width:250px;
+    max-width:100%;
+    margin:0 auto;
+}
+
+.type{
+    display:inline-block;
+    padding:8px 15px;
+    border-radius:20px;
+    margin:5px;
+    background:#555;
+}
+
+.stat{
+    margin:8px 0;
+    text-align:left;
+}
+
+.barbg{
+    background:#555;
+    height:18px;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.bar{
+    background:#4caf50;
+    height:18px;
+}
+
+video{
+    width:320px;
+    max-width:100%;
+    margin-top:20px;
+    border-radius:15px;
+    background:#000;
+}
+
+#photo{
+    display:none;
+    width:320px;
+    max-width:100%;
+    margin:10px auto 0 auto;
+    border-radius:15px;
+}
+
+canvas{
+    display:none;
+}
+
+#evolution{
+    font-size:20px;
+    margin-top:15px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+📖 포켓몬 도감 V2
+</header>
+
+<div class="container">
+
+    <input
+        id="pokemonName"
+        placeholder="포켓몬 이름 또는 번호">
+
+    <button onclick="searchPokemon()">
+        검색
+    </button>
+
+    <div class="card">
+
+        <h2 id="pokemonTitle">
+            포켓몬을 검색하세요
+        </h2>
+
+        <img
+            id="pokemonImage"
+            src=""
+            style="display:none;">
+
+        <div id="pokemonInfo"></div>
+
+        <div id="stats"></div>
+
+        <div id="evolution"></div>
+
+    </div>
+
+    <h2 style="margin-top:30px;">
+    📷 카메라
+    </h2>
+
+    <video
+        id="camera"
+        autoplay
+        playsinline
+        muted>
+    </video>
+
+    <br>
+
+    <button onclick="startCamera()">
+        카메라 켜기
+    </button>
+
+    <button onclick="takePhoto()">
+        사진 찍기
+    </button>
+
+    <br>
+
+    <canvas id="canvas"></canvas>
+
+    <img id="photo">
+
+</div>
+
+<script>
+// 포켓몬 데이터 가져오기
+async function getPokemon(id){
+    const res = await fetch("https://pokeapi.co/api/v2/pokemon/" + id);
+    if(!res.ok){
+        alert("포켓몬을 찾을 수 없습니다.");
+        return null;
+    }
+    return await res.json();
+}
+
+// 한글 이름으로 번호 찾기
+async function findPokemon(name){
+    if(!isNaN(name)) return name;
+
+    try{
+        let r = await fetch("https://pokeapi.co/api/v2/pokemon/" + name.toLowerCase());
+        if(r.ok) return name.toLowerCase();
+    }catch(e){}
+
+    for(let i=1; i<=1025; i++){
+        let s = await fetch("https://pokeapi.co/api/v2/pokemon-species/" + i);
+        let d = await s.json();
+        let ko = d.names.find(n => n.language.name === "ko");
+
+        if(ko && ko.name === name){
+            return i;
+        }
+    }
+    return null;
+}
+
+// 검색 기능 함수
+async function searchPokemon(){
+    let keyword = document.getElementById("pokemonName").value.trim();
+    if(!keyword){
+        alert("검색어를 입력해 주세요!");
+        return;
+    }
+
+    let id = await findPokemon(keyword);
+
+    if(id == null){
+        alert("포켓몬을 찾을 수 없습니다.");
+        return;
+    }
+
+    let data = await getPokemon(id);
+
+    let s = await fetch(data.species.url);
+    let sp = await s.json();
+
+    let ko = data.name;
+    let n = sp.names.find(x => x.language.name === "ko");
+    if(n) ko = n.name;
+
+    document.getElementById("pokemonTitle").innerHTML = ko;
+
+    document.getElementById("pokemonImage").style.display = "block";
+    document.getElementById("pokemonImage").src =
+    data.sprites.other["official-artwork"].front_default;
+
+    document.getElementById("pokemonInfo").innerHTML =
+    "<h3>No." + data.id + "</h3>" +
+    "<p>타입 : " + data.types.map(t => t.type.name).join(" / ") + "</p>" +
+    "<p>키 : " + (data.height/10) + " m</p>" +
+    "<p>몸무게 : " + (data.weight/10) + " kg</p>";
+
+    // 능력치 표시
+    let statHTML = "<h3>능력치</h3>";
+    data.stats.forEach(s => {
+        statHTML += `
+        <div class="stat">
+            ${s.stat.name} : ${s.base_stat}
+            <div class="barbg">
+                <div class="bar" style="width:${Math.min(s.base_stat, 100)}%"></div>
+            </div>
+        </div>
+        `;
+    });
+    document.getElementById("stats").innerHTML = statHTML;
+
+    // 진화 정보
+    let evoRes = await fetch(sp.evolution_chain.url);
+    let evoData = await evoRes.json();
+
+    let chain = evoData.chain;
+    let evoList = [];
+
+    while(chain){
+        evoList.push(chain.species.name);
+        if(chain.evolves_to.length > 0){
+            chain = chain.evolves_to[0];
+        }else{
+            chain = null;
+        }
+    }
+
+    document.getElementById("evolution").innerHTML =
+    "<h3>진화</h3>" + evoList.join(" ➜ ");
+
+    // 도감 설명
+    let text = sp.flavor_text_entries.find(
+        x => x.language.name === "ko"
+    );
+
+    if(text){
+        document.getElementById("pokemonInfo").innerHTML +=
+        "<h3>설명</h3><p>" + text.flavor_text.replace(/[\n\f]/g, " ") + "</p>";
+    }
+}
+
+// PC 및 모바일 완벽 대응 카메라 기능
+async function startCamera(){
+    try {
+        const constraints = {
+            video: {
+                facingMode: { ideal: "environment" } // 모바일 후면 카메라 우선 사용
+            }
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = document.getElementById("camera");
+        
+        video.srcObject = stream;
+        video.setAttribute("playsinline", true);
+        await video.play();
+
+    } catch (e) {
+        console.error(e);
+        alert("카메라 권한을 허용해 주시거나 카메라 연결 상태를 확인해 주세요!");
+    }
+}
+
+function takePhoto(){
+    const video = document.getElementById("camera");
+    const canvas = document.getElementById("canvas");
+    const photo = document.getElementById("photo");
+
+    if(!video.videoWidth){
+        alert("먼저 카메라를 켜주세요!");
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    photo.src = canvas.toDataURL("image/png");
+    photo.style.display = "block";
+}
+</script>
+
+</body>
+</html>
