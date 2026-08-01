@@ -32,7 +32,7 @@
             overflow: hidden;
         }
 
-        /* 📺 2. bg.png 내부 화면 (검정 투명 배경 제거 유지) */
+        /* 📺 2. bg.png 내부 화면 */
         .rotom-screen {
             position: absolute;
             top: 45px;
@@ -101,8 +101,8 @@
         }
 
         .pokemon-img {
-            width: 120px;
-            height: 120px;
+            width: 110px;
+            height: 110px;
             object-fit: contain;
             filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6));
             transition: transform 0.2s ease;
@@ -114,7 +114,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             width: 100%;
         }
 
@@ -125,16 +125,44 @@
         }
 
         .pokemon-name {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 800;
             letter-spacing: 1px;
             color: #00d2d3;
         }
 
         .genus-text {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #f1c40f;
             font-weight: bold;
+        }
+
+        /* 🌴 폼 변형 선택 버튼 영역 */
+        .forms-container {
+            display: flex;
+            gap: 5px;
+            margin-top: 2px;
+            margin-bottom: 2px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .form-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .form-btn:hover, .form-btn.active {
+            background: #00d2d3;
+            color: #0f172a;
+            border-color: #00d2d3;
         }
 
         .types-container {
@@ -156,13 +184,13 @@
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px;
-            padding: 8px 12px;
-            margin-top: 6px;
-            font-size: 0.8rem;
-            line-height: 1.35;
+            padding: 6px 10px;
+            margin-top: 4px;
+            font-size: 0.78rem;
+            line-height: 1.3;
             text-align: center;
             width: 95%;
-            max-height: 52px;
+            max-height: 48px;
             overflow-y: auto;
         }
 
@@ -326,6 +354,9 @@
                     <button class="tts-btn" onclick="speakPokemonDescription()" title="다시듣기">🔊</button>
                 </div>
 
+                <!-- 🌴 리전 폼 버튼 표시 구역 -->
+                <div id="poke-forms" class="forms-container"></div>
+
                 <div id="poke-types" class="types-container"></div>
 
                 <div id="poke-description" class="description-box">
@@ -355,8 +386,9 @@
     let currentId = 1;
     let fullTextToSpeech = "";
     const TOTAL_POKEMON = 1025;
-    let koreanNameMap = {}; // '아르세우스' -> 493 매핑 창고
+    let koreanNameMap = {};
     let gridLoaded = false;
+    let currentVarieties = []; // 현재 포켓몬의 폼/리전폼 목록
 
     const typeTranslations = {
         normal: { name: '노말', color: '#A8A878' },
@@ -379,14 +411,22 @@
         fairy: { name: '페어리', color: '#EE99AC' }
     };
 
-    // ⚡ 핵심 해결책: 시작하자마자 1025마리 한글 이름 목록을 백그라운드에서 한 번에 모두 로딩!
+    // 폼 이름을 예쁜 한글 라벨로 변환 (알로라, 가라르, 히스이 등)
+    function formatFormName(name) {
+        if (name.includes('-alola')) return '알로라폼';
+        if (name.includes('-galar')) return '가라르폼';
+        if (name.includes('-hisui')) return '히스이폼';
+        if (name.includes('-paldea')) return '팔데아폼';
+        if (name.includes('-mega')) return '메가진화';
+        if (name.includes('-gmax')) return '거다이맥스';
+        return '기존 모습';
+    }
+
     async function loadAllKoreanNames() {
         try {
-            // PokeAPI의 1025개 species 목록을 요청
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species?limit=${TOTAL_POKEMON}`);
             const data = await res.json();
             
-            // 병렬로 빠른 처리
             const promises = data.results.map(async (item, index) => {
                 const id = index + 1;
                 try {
@@ -399,8 +439,6 @@
                     }
                 } catch(e) {}
             });
-            
-            // 백그라운드 완성
             await Promise.all(promises);
         } catch (e) {
             console.error("한글 전체 데이터 로딩 중 오류:", e);
@@ -422,64 +460,19 @@
         if (fullTextToSpeech) speakText(fullTextToSpeech);
     }
 
-    async function fetchPokemon(query) {
-        document.getElementById('loader').style.display = 'block';
-        document.getElementById('pokemon-data').style.display = 'none';
-
+    // 🌴 특정 폼(알로라, 가라르 등) 데이터로 화면 갱신
+    async function fetchFormDetail(formUrl, formName, baseKoreanName, genusText, description) {
         try {
-            let targetId = query;
-            
-            // 입력값이 문자인 경우 (한글 포켓몬 이름)
-            if (isNaN(query)) {
-                let cleanQuery = query.trim().replace(/\s+/g, '');
-                
-                // 1. 매핑 창고에서 조회
-                if (koreanNameMap[cleanQuery]) {
-                    targetId = koreanNameMap[cleanQuery];
-                } else {
-                    // 2. 단독 species 단일 요청 시도 (실시간 검색)
-                    let foundId = null;
-                    try {
-                        // species 호출
-                        for (let i = 1; i <= TOTAL_POKEMON; i++) {
-                            if (koreanNameMap[cleanQuery]) {
-                                foundId = koreanNameMap[cleanQuery];
-                                break;
-                            }
-                        }
-                    } catch(e) {}
-
-                    if (foundId) {
-                        targetId = foundId;
-                    } else {
-                        alert(`'${query}' 포켓몬을 찾을 수 없다로토! 멍멍!`);
-                        resetView();
-                        return;
-                    }
-                }
-            }
-
-            const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${targetId}`);
-            if (!res.ok) throw new Error("데이터 없음");
+            const res = await fetch(formUrl);
             const data = await res.json();
 
-            const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${data.id}`);
-            const speciesData = await speciesRes.json();
-            
-            const koreanNameObj = speciesData.names.find(n => n.language.name === 'ko');
-            const koreanName = koreanNameObj ? koreanNameObj.name : data.name;
+            // 이미지 설정
+            document.getElementById('poke-img').src = 
+                data.sprites.other['official-artwork'].front_default || 
+                data.sprites.front_default || 
+                data.sprites.other.home.front_default;
 
-            // 찾아낸 한글 이름도 즉시 사전 저장
-            koreanNameMap[koreanName.replace(/\s+/g, '')] = data.id;
-
-            const genusObj = speciesData.genera.find(g => g.language.name === 'ko');
-            const genusText = genusObj ? genusObj.genus : "";
-
-            const flavorObj = speciesData.flavor_text_entries.find(f => f.language.name === 'ko');
-            let description = flavorObj ? flavorObj.flavor_text.replace(/[\n\f\r]/g, " ") : "설명이 제공되지 않는다로토.";
-
-            currentId = data.id;
-
+            // 타입 설정
             const typesContainer = document.getElementById('poke-types');
             typesContainer.innerHTML = '';
             data.types.forEach(t => {
@@ -491,8 +484,78 @@
                 typesContainer.appendChild(badge);
             });
 
-            document.getElementById('poke-img').src = data.sprites.other['official-artwork'].front_default || data.sprites.front_default;
-            document.getElementById('poke-name').innerText = koreanName;
+            // 폼 버튼 active 표시 관리
+            const buttons = document.querySelectorAll('.form-btn');
+            buttons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.formName === formName);
+            });
+
+            // 이름 표기 (알로라 등 붙여주기)
+            const label = formatFormName(formName);
+            const displayName = label === '기존 모습' ? baseKoreanName : `${baseKoreanName} (${label})`;
+            document.getElementById('poke-name').innerText = displayName;
+
+            fullTextToSpeech = `${displayName}. ${genusText}. ${description}`;
+            speakText(fullTextToSpeech);
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function fetchPokemon(query) {
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('pokemon-data').style.display = 'none';
+
+        try {
+            let targetId = query;
+            
+            if (isNaN(query)) {
+                let cleanQuery = query.trim().replace(/\s+/g, '');
+                if (koreanNameMap[cleanQuery]) {
+                    targetId = koreanNameMap[cleanQuery];
+                } else {
+                    alert(`'${query}' 포켓몬을 찾을 수 없다로토! 멍멍!`);
+                    resetView();
+                    return;
+                }
+            }
+
+            const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${targetId}`);
+            if (!speciesRes.ok) throw new Error("데이터 없음");
+            const speciesData = await speciesRes.json();
+            
+            const koreanNameObj = speciesData.names.find(n => n.language.name === 'ko');
+            const koreanName = koreanNameObj ? koreanNameObj.name : speciesData.name;
+
+            koreanNameMap[koreanName.replace(/\s+/g, '')] = speciesData.id;
+
+            const genusObj = speciesData.genera.find(g => g.language.name === 'ko');
+            const genusText = genusObj ? genusObj.genus : "";
+
+            const flavorObj = speciesData.flavor_text_entries.find(f => f.language.name === 'ko');
+            let description = flavorObj ? flavorObj.flavor_text.replace(/[\n\f\r]/g, " ") : "설명이 제공되지 않는다로토.";
+
+            currentId = speciesData.id;
+
+            // 🌴 폼 목록(알로라, 가라르 등 리전폼 추출)
+            const formsContainer = document.getElementById('poke-forms');
+            formsContainer.innerHTML = '';
+            
+            currentVarieties = speciesData.varieties || [];
+
+            // 폼이 2개 이상일 때만 (리전폼, 폼 체인지 존재 시) 버튼 생성
+            if (currentVarieties.length > 1) {
+                currentVarieties.forEach(v => {
+                    const btn = document.createElement('button');
+                    btn.className = 'form-btn';
+                    btn.innerText = formatFormName(v.pokemon.name);
+                    btn.dataset.formName = v.pokemon.name;
+                    btn.onclick = () => fetchFormDetail(v.pokemon.url, v.pokemon.name, koreanName, genusText, description);
+                    formsContainer.appendChild(btn);
+                });
+            }
+
             document.getElementById('poke-genus').innerText = genusText;
             document.getElementById('poke-description').innerText = description;
             document.getElementById('poke-num-badge').innerText = String(currentId).padStart(3, '0');
@@ -500,8 +563,11 @@
             document.getElementById('loader').style.display = 'none';
             document.getElementById('pokemon-data').style.display = 'flex';
 
-            fullTextToSpeech = `${koreanName}. ${genusText}. ${description}`;
-            speakText(fullTextToSpeech);
+            // 기본 폼으로 우선 로드
+            const defaultVariety = currentVarieties.find(v => v.is_default) || currentVarieties[0];
+            if (defaultVariety) {
+                fetchFormDetail(defaultVariety.pokemon.url, defaultVariety.pokemon.name, koreanName, genusText, description);
+            }
 
         } catch (error) {
             console.error(error);
@@ -584,7 +650,6 @@
         fetchPokemon(currentId);
     }
 
-    // 전설/인기 포켓몬 번호 사전 수동 등록 (로딩 전 검색 대비)
     koreanNameMap['아르세우스'] = 493;
     koreanNameMap['디아루가'] = 483;
     koreanNameMap['펄기아'] = 484;
@@ -594,11 +659,9 @@
     koreanNameMap['뮤츠'] = 150;
     koreanNameMap['뮤'] = 151;
     koreanNameMap['피카츄'] = 25;
+    koreanNameMap['나옹'] = 52;
 
-    // 백그라운드 1025마리 한글 자동 수집 시작
     loadAllKoreanNames();
-    
-    // 초기 실행
     fetchPokemon(currentId);
 </script>
 
