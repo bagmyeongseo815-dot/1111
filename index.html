@@ -35,10 +35,10 @@
         /* 메인 콘텐츠 영역 */
         .screen-content {
             position: absolute;
-            top: 20px;
+            top: 15px;
             left: 180px;
             right: 180px;
-            bottom: 20px;
+            bottom: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -56,13 +56,13 @@
         }
 
         .search-input {
-            padding: 6px 12px;
+            padding: 5px 12px;
             border-radius: 15px;
             border: 2px solid rgba(255, 255, 255, 0.6);
             background: rgba(0, 0, 0, 0.4);
             color: white;
             outline: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-align: center;
             backdrop-filter: blur(4px);
         }
@@ -75,7 +75,7 @@
             background: #ffd700;
             color: #2b3a4a;
             border: none;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 15px;
             font-weight: bold;
             cursor: pointer;
@@ -88,8 +88,8 @@
 
         /* 포켓몬 이미지 */
         .pokemon-img {
-            width: 170px;
-            height: 170px;
+            width: 150px;
+            height: 150px;
             object-fit: contain;
             filter: drop-shadow(0 8px 12px rgba(0,0,0,0.4));
             transition: transform 0.2s ease;
@@ -99,15 +99,35 @@
             transform: scale(1.05);
         }
 
-        /* 포켓몬 이름 */
+        /* 포켓몬 정보 영역 */
         .pokemon-info {
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
         }
 
         .pokemon-name {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 800;
             letter-spacing: 1px;
+        }
+
+        /* 🏷️ 타입 태그 스타일 */
+        .types-container {
+            display: flex;
+            gap: 6px;
+        }
+
+        .type-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         /* 컨트롤 버튼 (이전/다음 포켓몬) */
@@ -121,7 +141,7 @@
             background: rgba(255, 255, 255, 0.2);
             border: 2px solid rgba(255, 255, 255, 0.5);
             color: white;
-            padding: 6px 16px;
+            padding: 5px 14px;
             border-radius: 20px;
             cursor: pointer;
             font-weight: bold;
@@ -134,7 +154,7 @@
             transform: translateY(-2px);
         }
 
-        /* 오른쪽 번호 표시 영역 (우측 하단) */
+        /* 오른쪽 번호 표시 영역 */
         .id-badge {
             position: absolute;
             bottom: 25px;
@@ -155,11 +175,10 @@
 <body>
 
 <div class="pokedex-container">
-    <!-- 메인 정보 화면 -->
     <div class="screen-content">
         <!-- 상단 검색창 -->
         <div class="search-box">
-            <input type="text" id="search-input" class="search-input" placeholder="이름 또는 번호 입력..." onkeydown="checkEnter(event)">
+            <input type="text" id="search-input" class="search-input" placeholder="이름 또는 번호..." onkeydown="checkEnter(event)">
             <button class="search-btn" onclick="searchPokemon()">검색</button>
         </div>
 
@@ -169,6 +188,7 @@
             <img id="poke-img" class="pokemon-img" src="" alt="포켓몬 이미지">
             <div class="pokemon-info">
                 <div id="poke-name" class="pokemon-name">이상해씨</div>
+                <div id="poke-types" class="types-container"></div>
             </div>
         </div>
 
@@ -186,7 +206,29 @@
 <script>
     let currentId = 1;
 
-    // 포켓몬 정보 불러오기 (ID 번호 또는 한글/영문 이름 검색 가능)
+    // 한글 타입 이름 & 색상
+    const typeTranslations = {
+        normal: { name: '노말', color: '#A8A878' },
+        fire: { name: '불꽃', color: '#F08030' },
+        water: { name: '물', color: '#6890F0' },
+        grass: { name: '풀', color: '#78C850' },
+        electric: { name: '전기', color: '#F8D030' },
+        ice: { name: '얼음', color: '#98D8D8' },
+        fighting: { name: '격투', color: '#C03028' },
+        poison: { name: '독', color: '#A040A0' },
+        ground: { name: '땅', color: '#E0C068' },
+        flying: { name: '비행', color: '#A890F0' },
+        psychic: { name: '에스퍼', color: '#F85888' },
+        bug: { name: '벌레', color: '#A8B820' },
+        rock: { name: '바위', color: '#B8A038' },
+        ghost: { name: '고스트', color: '#705898' },
+        dragon: { name: '드래곤', color: '#7038F8' },
+        dark: { name: '악', color: '#705848' },
+        steel: { name: '강철', color: '#B8B8D0' },
+        fairy: { name: '페어리', color: '#EE99AC' }
+    };
+
+    // 포켓몬 정보 불러오기
     async function fetchPokemon(query) {
         document.getElementById('loader').style.display = 'block';
         document.getElementById('pokemon-data').style.display = 'none';
@@ -194,7 +236,7 @@
         try {
             let targetId = query;
 
-            // 입력값이 숫자가 아닐 경우 (한글/영문 이름 검색 처리)
+            // 숫자 형태가 아니면(한글/영문 이름 검색 시)
             if (isNaN(query)) {
                 targetId = await findIdByName(query);
                 if (!targetId) {
@@ -205,7 +247,7 @@
                 }
             }
 
-            // 1. 기본 정보 및 이미지 가져오기
+            // 1. 기본 정보 가져오기
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${targetId}`);
             if (!res.ok) throw new Error("포켓몬 없음");
             const data = await res.json();
@@ -217,8 +259,20 @@
             const koreanNameObj = speciesData.names.find(name => name.language.name === 'ko');
             const koreanName = koreanNameObj ? koreanNameObj.name : data.name;
 
-            // 현재 ID 업데이트
             currentId = data.id;
+
+            // 3. 타입 정보 처리
+            const typesContainer = document.getElementById('poke-types');
+            typesContainer.innerHTML = '';
+
+            data.types.forEach(t => {
+                const typeInfo = typeTranslations[t.type.name] || { name: t.type.name, color: '#777' };
+                const badge = document.createElement('span');
+                badge.className = 'type-badge';
+                badge.style.backgroundColor = typeInfo.color;
+                badge.innerText = typeInfo.name;
+                typesContainer.appendChild(badge);
+            });
 
             // UI 업데이트
             const formattedId = String(currentId).padStart(3, '0');
@@ -236,27 +290,34 @@
         }
     }
 
-    // 한글 이름으로 도감 번호(ID) 찾아주는 함수
-    async function findIdByName(name) {
-        const cleanName = name.trim().toLowerCase();
-        
-        // 1번부터 1025번까지 반복 탐색하는 대신 API 데이터를 확인
-        for (let i = 1; i <= 1025; i++) {
-            // 연동 편의상 번호 직접 검색이 빠르지만, 한글 검색을 지원하기 위한 수동 맵핑/간이 찾기
-            // 성능을 위해 간단한 한글 호환 모드 적용
-        }
-        
-        // 이름을 API로 검색 시도 (영문일 경우)
-        try {
-            const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${cleanName}`);
-            if (res.ok) {
-                const data = await res.json();
-                return data.id;
-            }
-        } catch(e) {}
+    // 한글 및 영문 이름 검색을 위한 실시간 탐색 함수
+    async function findIdByName(searchName) {
+        const nameToSearch = searchName.trim().replaceAll(" ", "");
 
-        // 번호로 반환 시도
-        return isNaN(cleanName) ? null : parseInt(cleanName);
+        // PokeAPI 전체 종 데이터에서 한글 이름 일치 여부 확인
+        try {
+            // 1세대~9세대 주요 포켓몬 검색 지원
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species?limit=1025`);
+            const allSpecies = await res.json();
+            
+            // 영문 이름 검색 시도
+            const foundBySlug = allSpecies.results.find(p => p.name === nameToSearch.toLowerCase());
+            if (foundBySlug) {
+                const urlParts = foundBySlug.url.split('/');
+                return urlParts[urlParts.length - 2];
+            }
+
+            // 한글 검색 시 직접 Species 세부 정보 확인 (단일 검색 API)
+            const searchRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${encodeURIComponent(nameToSearch.toLowerCase())}`);
+            if (searchRes.ok) {
+                const searchData = await searchRes.json();
+                return searchData.id;
+            }
+        } catch (e) {
+            console.log("이름 검색 중...", e);
+        }
+
+        return null;
     }
 
     function searchPokemon() {
@@ -279,7 +340,6 @@
         fetchPokemon(currentId);
     }
 
-    // 처음 시작 시 1번 포켓몬 로드
     fetchPokemon(currentId);
 </script>
 
