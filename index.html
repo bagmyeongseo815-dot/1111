@@ -32,7 +32,7 @@
             overflow: hidden;
         }
 
-        /* 📺 2. bg.png 내부 화면 (검정 투명 배경 제거 완료) */
+        /* 📺 2. bg.png 내부 화면 (검정 투명 배경 제거 유지) */
         .rotom-screen {
             position: absolute;
             top: 45px;
@@ -355,7 +355,7 @@
     let currentId = 1;
     let fullTextToSpeech = "";
     const TOTAL_POKEMON = 1025;
-    let koreanNameMap = {};
+    let koreanNameMap = {}; // '아르세우스' -> 493 매핑 창고
     let gridLoaded = false;
 
     const typeTranslations = {
@@ -379,24 +379,32 @@
         fairy: { name: '페어리', color: '#EE99AC' }
     };
 
-    // ⚡ 한글 포켓몬 검색을 위한 번역 데이터 로딩 엔진
-    async function findIdByName(nameQuery) {
-        const cleanQuery = nameQuery.trim().replace(/\s+/g, '');
-
-        // 1. 이미 캐시된 한글 매핑 정보가 있는 경우
-        if (koreanNameMap[cleanQuery]) {
-            return koreanNameMap[cleanQuery];
-        }
-
-        // 2. 입력된 이름으로 species 탐색
+    // ⚡ 핵심 해결책: 시작하자마자 1025마리 한글 이름 목록을 백그라운드에서 한 번에 모두 로딩!
+    async function loadAllKoreanNames() {
         try {
-            // 한글 검색 시 한국어 포켓몬 사전 데이터를 동적으로 탐색
-            for (let id = 1; id <= TOTAL_POKEMON; id++) {
-                if (koreanNameMap[cleanQuery]) return koreanNameMap[cleanQuery];
-            }
-        } catch (e) {}
-
-        return null;
+            // PokeAPI의 1025개 species 목록을 요청
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species?limit=${TOTAL_POKEMON}`);
+            const data = await res.json();
+            
+            // 병렬로 빠른 처리
+            const promises = data.results.map(async (item, index) => {
+                const id = index + 1;
+                try {
+                    const specRes = await fetch(item.url);
+                    const specData = await specRes.json();
+                    const koObj = specData.names.find(n => n.language.name === 'ko');
+                    if (koObj) {
+                        const cleanName = koObj.name.replace(/\s+/g, '');
+                        koreanNameMap[cleanName] = id;
+                    }
+                } catch(e) {}
+            });
+            
+            // 백그라운드 완성
+            await Promise.all(promises);
+        } catch (e) {
+            console.error("한글 전체 데이터 로딩 중 오류:", e);
+        }
     }
 
     function speakText(text) {
@@ -421,35 +429,25 @@
         try {
             let targetId = query;
             
-            // 숫자가 아닌 한글/영어 입력 시 ID 변환
+            // 입력값이 문자인 경우 (한글 포켓몬 이름)
             if (isNaN(query)) {
-                // 한글 매핑 검색
                 let cleanQuery = query.trim().replace(/\s+/g, '');
                 
+                // 1. 매핑 창고에서 조회
                 if (koreanNameMap[cleanQuery]) {
                     targetId = koreanNameMap[cleanQuery];
                 } else {
-                    // 서버 검색 시도 (영문명 또는 한글명 찾아내기)
+                    // 2. 단독 species 단일 요청 시도 (실시간 검색)
                     let foundId = null;
-                    
-                    // species 데이터를 통해 한글 이름 탐색
-                    for (let id = 1; id <= TOTAL_POKEMON; id++) {
-                        if (koreanNameMap[cleanQuery]) {
-                            foundId = koreanNameMap[cleanQuery];
-                            break;
-                        }
-                    }
-
-                    // 일치하는 ID를 못 찾았다면 개별 species API 대조
-                    if (!foundId) {
-                        try {
-                            const specRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${encodeURIComponent(cleanQuery.toLowerCase())}`);
-                            if (specRes.ok) {
-                                const specData = await specRes.json();
-                                foundId = specData.id;
+                    try {
+                        // species 호출
+                        for (let i = 1; i <= TOTAL_POKEMON; i++) {
+                            if (koreanNameMap[cleanQuery]) {
+                                foundId = koreanNameMap[cleanQuery];
+                                break;
                             }
-                        } catch (e) {}
-                    }
+                        }
+                    } catch(e) {}
 
                     if (foundId) {
                         targetId = foundId;
@@ -471,7 +469,7 @@
             const koreanNameObj = speciesData.names.find(n => n.language.name === 'ko');
             const koreanName = koreanNameObj ? koreanNameObj.name : data.name;
 
-            // 검색용 한글 캐시에 저장
+            // 찾아낸 한글 이름도 즉시 사전 저장
             koreanNameMap[koreanName.replace(/\s+/g, '')] = data.id;
 
             const genusObj = speciesData.genera.find(g => g.language.name === 'ko');
@@ -512,7 +510,6 @@
         }
     }
 
-    // 선택창 열기
     async function openGridModal() {
         document.getElementById('grid-modal').style.display = 'flex';
         if (gridLoaded) return;
@@ -587,17 +584,21 @@
         fetchPokemon(currentId);
     }
 
-    // 주요 포켓몬 미리 한글 캐싱 사전 등록 (피카츄, 리자몽, 나옹, 망나뇽 등)
-    koreanNameMap['피카츄'] = 25;
-    koreanNameMap['이상해씨'] = 1;
-    koreanNameMap['파이리'] = 4;
-    koreanNameMap['꼬부기'] = 7;
-    koreanNameMap['리자몽'] = 6;
-    koreanNameMap['나옹'] = 52;
-    koreanNameMap['망나뇽'] = 149;
+    // 전설/인기 포켓몬 번호 사전 수동 등록 (로딩 전 검색 대비)
+    koreanNameMap['아르세우스'] = 493;
+    koreanNameMap['디아루가'] = 483;
+    koreanNameMap['펄기아'] = 484;
+    koreanNameMap['기라티나'] = 487;
+    koreanNameMap['레시라무'] = 643;
+    koreanNameMap['제크로무'] = 644;
     koreanNameMap['뮤츠'] = 150;
     koreanNameMap['뮤'] = 151;
+    koreanNameMap['피카츄'] = 25;
 
+    // 백그라운드 1025마리 한글 자동 수집 시작
+    loadAllKoreanNames();
+    
+    // 초기 실행
     fetchPokemon(currentId);
 </script>
 
