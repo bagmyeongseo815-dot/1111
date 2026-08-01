@@ -20,25 +20,25 @@
             min-height: 100vh;
         }
 
-        /* 1. 배경 이미지를 전체 도감 틀로 설정 */
+        /* 1. 배경 이미지 세팅 */
         .pokedex-container {
             position: relative;
             width: 900px;
-            height: 450px;
+            height: 480px;
             background: url('bg.png') no-repeat center center;
-            background-size: 100% 100%; /* 이미지 비율을 딱 맞게 고정 */
+            background-size: 100% 100%;
             border-radius: 16px;
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
             overflow: hidden;
         }
 
-        /* 2. 중앙 격자 화면 영역 위치 잡기 */
+        /* 2. 중앙 메인 콘텐츠 */
         .screen-content {
             position: absolute;
-            top: 25px;
-            left: 200px;   /* 왼쪽 UI 영역 피함 */
-            right: 200px;  /* 오른쪽 UI 영역 피함 */
-            bottom: 35px;
+            top: 20px;
+            left: 180px;
+            right: 180px;
+            bottom: 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -47,7 +47,7 @@
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
         }
 
-        /* 상단 검색창 */
+        /* 검색창 */
         .search-box {
             display: flex;
             gap: 8px;
@@ -55,13 +55,13 @@
         }
 
         .search-input {
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 20px;
             border: 2px solid rgba(255, 255, 255, 0.5);
             background: rgba(0, 0, 0, 0.5);
             color: white;
             outline: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-align: center;
             backdrop-filter: blur(4px);
         }
@@ -72,7 +72,7 @@
             background: #ffd700;
             color: #1e293b;
             border: none;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 20px;
             font-weight: bold;
             cursor: pointer;
@@ -81,32 +81,99 @@
 
         .search-btn:hover { transform: scale(1.05); }
 
-        /* 중앙 포켓몬 정보 */
+        /* 포켓몬 디스플레이 */
         .pokemon-display {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            width: 100%;
         }
 
         .pokemon-img {
-            width: 170px;
-            height: 170px;
+            width: 130px;
+            height: 130px;
             object-fit: contain;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 8px 12px rgba(0,0,0,0.5));
             transition: transform 0.2s ease;
         }
 
         .pokemon-img:hover { transform: scale(1.05); }
 
-        .pokemon-name {
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-            margin-top: 5px;
+        .pokemon-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
         }
 
-        /* 하단 이전/다음 버튼 */
+        .pokemon-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pokemon-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .genus-text {
+            font-size: 0.85rem;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        /* 🏷️ 타입 태그 */
+        .types-container {
+            display: flex;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .type-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* 📜 포켓몬 설명 박스 */
+        .description-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+            text-align: center;
+            width: 90%;
+            max-height: 55px;
+            overflow-y: auto;
+            backdrop-filter: blur(4px);
+        }
+
+        /* 🔊 다시듣기 버튼 */
+        .tts-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .tts-btn:hover { background: rgba(255, 255, 255, 0.4); }
+
+        /* 하단 컨트롤 버튼 */
         .controls {
             display: flex;
             gap: 20px;
@@ -116,7 +183,7 @@
             background: rgba(255, 255, 255, 0.15);
             border: 2px solid rgba(255, 255, 255, 0.4);
             color: white;
-            padding: 6px 18px;
+            padding: 5px 16px;
             border-radius: 20px;
             cursor: pointer;
             font-weight: bold;
@@ -129,22 +196,20 @@
             transform: translateY(-2px);
         }
 
-        /* 3. 오른쪽 하단 흰색 베젤 위치에 도감 번호 딱 맞추기 */
+        /* 우하단 번호 배지 */
         .id-badge {
             position: absolute;
-            bottom: 32px;
-            right: 45px;
-            font-size: 1.8rem;
+            bottom: 25px;
+            right: 35px;
+            font-size: 1.6rem;
             font-weight: 900;
-            color: #2e3e4e; /* 이미지의 우하단 원 바탕색과 잘 어울리는 색상 */
-            letter-spacing: 1px;
+            color: #2e3e4e;
         }
 
         .loading {
             font-size: 1.1rem;
             font-weight: bold;
             text-align: center;
-            line-height: 1.5;
             margin: auto;
         }
     </style>
@@ -152,9 +217,8 @@
 <body>
 
 <div class="pokedex-container">
-    <!-- 이미지 중앙 화면에 띄워질 요소들 -->
     <div class="screen-content">
-        <!-- 검색바 -->
+        <!-- 검색 영역 -->
         <div class="search-box">
             <input type="text" id="search-input" class="search-input" placeholder="이름 또는 번호..." onkeydown="checkEnter(event)">
             <button class="search-btn" onclick="searchPokemon()">검색</button>
@@ -162,29 +226,87 @@
 
         <!-- 로딩 표시 -->
         <div id="loader" class="loading" style="display: none;">
-            정밀 탐색 중... ⚡<br><span style="font-size: 0.85rem; font-weight: normal; color: #ddd;">모든 데이터를 찾고 있습니다.</span>
+            도감 조회 중... ⚡
         </div>
 
-        <!-- 포켓몬 메인 정보 -->
+        <!-- 포켓몬 정보 -->
         <div id="pokemon-data" class="pokemon-display">
             <img id="poke-img" class="pokemon-img" src="" alt="포켓몬">
-            <div id="poke-name" class="pokemon-name">이상해씨</div>
+            
+            <div class="pokemon-info">
+                <div class="pokemon-header">
+                    <span id="poke-name" class="pokemon-name">이상해씨</span>
+                    <span id="poke-genus" class="genus-text">씨앗포켓몬</span>
+                    <button class="tts-btn" onclick="speakPokemonDescription()" title="설명 다시듣기">🔊</button>
+                </div>
+
+                <!-- 타입 표시 -->
+                <div id="poke-types" class="types-container"></div>
+
+                <!-- 📜 특징/설명 박스 -->
+                <div id="poke-description" class="description-box">
+                    태어났을 때부터 세변에 이상한 씨앗이 심어져 있으며 몸과 함께 자란다고 한다.
+                </div>
+            </div>
         </div>
 
-        <!-- 이동 버튼 -->
+        <!-- 버튼 영역 -->
         <div class="controls">
             <button class="btn" onclick="changePokemon(-1)">◀ 이전</button>
             <button class="btn" onclick="changePokemon(1)">다음 ▶</button>
         </div>
     </div>
 
-    <!-- 우측 하단 번호 영역 (이미지 틀 구석에 고정) -->
+    <!-- 번호 배지 -->
     <div id="poke-num-badge" class="id-badge">001</div>
 </div>
 
 <script>
     let currentId = 1;
+    let fullTextToSpeech = "";
     const TOTAL_POKEMON = 1025;
+
+    // 한글 타입 이름 & 색상
+    const typeTranslations = {
+        normal: { name: '노말', color: '#A8A878' },
+        fire: { name: '불꽃', color: '#F08030' },
+        water: { name: '물', color: '#6890F0' },
+        grass: { name: '풀', color: '#78C850' },
+        electric: { name: '전기', color: '#F8D030' },
+        ice: { name: '얼음', color: '#98D8D8' },
+        fighting: { name: '격투', color: '#C03028' },
+        poison: { name: '독', color: '#A040A0' },
+        ground: { name: '땅', color: '#E0C068' },
+        flying: { name: '비행', color: '#A890F0' },
+        psychic: { name: '에스퍼', color: '#F85888' },
+        bug: { name: '벌레', color: '#A8B820' },
+        rock: { name: '바위', color: '#B8A038' },
+        ghost: { name: '고스트', color: '#705898' },
+        dragon: { name: '드래곤', color: '#7038F8' },
+        dark: { name: '악', color: '#705848' },
+        steel: { name: '강철', color: '#B8B8D0' },
+        fairy: { name: '페어리', color: '#EE99AC' }
+    };
+
+    // 🔊 TTS 음성 출력 함수
+    function speakText(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // 기존 음성 멈춤
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ko-KR';
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.1; 
+
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function speakPokemonDescription() {
+        if (fullTextToSpeech) {
+            speakText(fullTextToSpeech);
+        }
+    }
 
     async function fetchPokemon(query) {
         document.getElementById('loader').style.display = 'block';
@@ -193,34 +315,63 @@
         try {
             let targetId = query;
 
-            // 한글/영문 이름으로 검색할 경우 전체 탐색
             if (isNaN(query)) {
                 targetId = await findIdByNameDeep(query);
                 if (!targetId) {
-                    alert("포켓몬을 찾을 수 없습니다! 오타를 확인해주세요. 멍멍!");
+                    alert("포켓몬을 찾을 수 없습니다! 멍멍!");
                     resetView(); return;
                 }
             }
 
+            // 1. 기본 정보 (이미지, 타입)
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${targetId}`);
             if (!res.ok) throw new Error("데이터 없음");
             const data = await res.json();
 
+            // 2. 종 정보 (한글 이름, 분류/특징, 도감 설명)
             const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${data.id}`);
             const speciesData = await speciesRes.json();
             
-            const koreanNameObj = speciesData.names.find(name => name.language.name === 'ko');
+            // 한글 이름
+            const koreanNameObj = speciesData.names.find(n => n.language.name === 'ko');
             const koreanName = koreanNameObj ? koreanNameObj.name : data.name;
+
+            // 한글 분류 (예: 씨앗포켓몬)
+            const genusObj = speciesData.genera.find(g => g.language.name === 'ko');
+            const genusText = genusObj ? genusObj.genus : "";
+
+            // 한글 도감 설명 (줄바꿈 및 특수문자 정리)
+            const flavorObj = speciesData.flavor_text_entries.find(f => f.language.name === 'ko');
+            let description = flavorObj ? flavorObj.flavor_text.replace(/[\n\f\r]/g, " ") : "설명이 제공되지 않는 포켓몬입니다.";
 
             currentId = data.id;
 
-            // UI 반영
+            // 타입 라벨 생성
+            const typesContainer = document.getElementById('poke-types');
+            typesContainer.innerHTML = '';
+            data.types.forEach(t => {
+                const typeInfo = typeTranslations[t.type.name] || { name: t.type.name, color: '#777' };
+                const badge = document.createElement('span');
+                badge.className = 'type-badge';
+                badge.style.backgroundColor = typeInfo.color;
+                badge.innerText = typeInfo.name;
+                typesContainer.appendChild(badge);
+            });
+
+            // UI 업데이트
             document.getElementById('poke-img').src = data.sprites.other['official-artwork'].front_default;
             document.getElementById('poke-name').innerText = koreanName;
+            document.getElementById('poke-genus').innerText = genusText;
+            document.getElementById('poke-description').innerText = description;
             document.getElementById('poke-num-badge').innerText = String(currentId).padStart(3, '0');
 
             document.getElementById('loader').style.display = 'none';
             document.getElementById('pokemon-data').style.display = 'flex';
+
+            // 🔊 "이름! 분류! 도감 설명!" 전체를 TTS로 읽기
+            fullTextToSpeech = `${koreanName}. ${genusText}. ${description}`;
+            speakText(fullTextToSpeech);
+
         } catch (error) {
             console.error(error);
             alert("오류가 발생했습니다. 멍멍!");
@@ -228,7 +379,6 @@
         }
     }
 
-    // 1025개 데이터 정밀 탐색
     async function findIdByNameDeep(searchName) {
         const cleanName = searchName.trim().replaceAll(" ", "");
         try {
