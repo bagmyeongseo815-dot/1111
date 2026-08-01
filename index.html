@@ -32,16 +32,16 @@
             overflow: hidden;
         }
 
-        /* 📺 2. bg.png 이미지의 '내부 화면' 위치 (검정 배경/테두리 삭제 완료!) */
+        /* 📺 2. bg.png 내부 화면 (검정 투명 배경 제거 완료) */
         .rotom-screen {
             position: absolute;
             top: 45px;
             left: 140px;
             right: 140px;
             bottom: 40px;
-            background: transparent; /* ⚡ 검정 투명 배경 제거! */
-            border: none;             /* ⚡ 테두리 제거! */
-            backdrop-filter: none;    /* ⚡ 블러 효과 제거! */
+            background: transparent;
+            border: none;
+            backdrop-filter: none;
             padding: 15px;
             display: flex;
             flex-direction: column;
@@ -51,7 +51,7 @@
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
         }
 
-        /* 상단 검색 & 선택창 버튼 바 */
+        /* 상단 메뉴 */
         .top-bar {
             display: flex;
             gap: 8px;
@@ -91,7 +91,7 @@
             background: #ffeaa7;
         }
 
-        /* 포켓몬 정보 표시 영역 */
+        /* 포켓몬 정보 영역 */
         .pokemon-display {
             display: flex;
             flex-direction: column;
@@ -137,7 +137,6 @@
             font-weight: bold;
         }
 
-        /* 타입 배지 */
         .types-container {
             display: flex;
             gap: 6px;
@@ -153,7 +152,6 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        /* 도감 설명 박스 */
         .description-box {
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -168,7 +166,6 @@
             overflow-y: auto;
         }
 
-        /* 🔊 음성 다시듣기 버튼 */
         .tts-btn {
             background: rgba(255, 255, 255, 0.2);
             border: none;
@@ -182,7 +179,6 @@
 
         .tts-btn:hover { background: rgba(255, 255, 255, 0.4); }
 
-        /* 하단 이전/다음 버튼 */
         .controls {
             display: flex;
             gap: 20px;
@@ -204,7 +200,6 @@
             transform: translateY(-2px);
         }
 
-        /* ID 배지 */
         .id-badge {
             position: absolute;
             bottom: 12px;
@@ -222,7 +217,6 @@
             color: #00d2d3;
         }
 
-        /* 🎴 선택창 모달 */
         .grid-modal {
             display: none;
             position: absolute;
@@ -264,7 +258,6 @@
             cursor: pointer;
         }
 
-        /* 선택창 포켓몬 그리드 */
         .pokemon-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -313,19 +306,16 @@
 
 <div class="pokedex-container">
     <div class="rotom-screen">
-        <!-- 상단 메뉴 -->
         <div class="top-bar">
             <input type="text" id="search-input" class="search-input" placeholder="한글 이름 또는 번호..." onkeydown="checkEnter(event)">
             <button class="btn-style" onclick="searchPokemon()">검색</button>
             <button class="btn-style" style="background: #00d2d3; color: white;" onclick="openGridModal()">☰ 선택창</button>
         </div>
 
-        <!-- 로딩 표시 -->
         <div id="loader" class="loading" style="display: none;">
             로토! 데이터 분석 중이다로토! ⚡
         </div>
 
-        <!-- 메인 디스플레이 -->
         <div id="pokemon-data" class="pokemon-display">
             <img id="poke-img" class="pokemon-img" src="" alt="포켓몬">
             
@@ -344,16 +334,13 @@
             </div>
         </div>
 
-        <!-- 하단 컨트롤 -->
         <div class="controls">
             <button class="btn" onclick="changePokemon(-1)">◀ 이전</button>
             <button class="btn" onclick="changePokemon(1)">다음 ▶</button>
         </div>
 
-        <!-- 우하단 번호 표시 -->
         <div id="poke-num-badge" class="id-badge">001</div>
 
-        <!-- 🎴 화면 틀에 맞춘 깔끔한 선택창 모달 -->
         <div id="grid-modal" class="grid-modal">
             <div class="modal-header">
                 <h3>🎴 포켓몬 선택하기 (1~1025)</h3>
@@ -369,8 +356,6 @@
     let fullTextToSpeech = "";
     const TOTAL_POKEMON = 1025;
     let koreanNameMap = {};
-    let idToKoreanName = {};
-    let isMapReady = false;
     let gridLoaded = false;
 
     const typeTranslations = {
@@ -394,43 +379,23 @@
         fairy: { name: '페어리', color: '#EE99AC' }
     };
 
-    async function initKoreanNameMap() {
-        if (isMapReady) return;
-        try {
-            const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species?limit=${TOTAL_POKEMON}`);
-            const data = await res.json();
-            
-            data.results.forEach((item, index) => {
-                const id = index + 1;
-            });
-            isMapReady = true;
-        } catch (e) {
-            console.error("한글 매핑 초기화 실패:", e);
-        }
-    }
-
+    // ⚡ 한글 포켓몬 검색을 위한 번역 데이터 로딩 엔진
     async function findIdByName(nameQuery) {
         const cleanQuery = nameQuery.trim().replace(/\s+/g, '');
-        
+
+        // 1. 이미 캐시된 한글 매핑 정보가 있는 경우
         if (koreanNameMap[cleanQuery]) {
             return koreanNameMap[cleanQuery];
         }
 
+        // 2. 입력된 이름으로 species 탐색
         try {
+            // 한글 검색 시 한국어 포켓몬 사전 데이터를 동적으로 탐색
             for (let id = 1; id <= TOTAL_POKEMON; id++) {
-                if (idToKoreanName[id] && idToKoreanName[id].replace(/\s+/g, '') === cleanQuery) {
-                    return id;
-                }
+                if (koreanNameMap[cleanQuery]) return koreanNameMap[cleanQuery];
             }
+        } catch (e) {}
 
-            const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${cleanQuery.toLowerCase()}`);
-            if (speciesRes.ok) {
-                const sData = await speciesRes.json();
-                return sData.id;
-            }
-        } catch (e) {
-            // 조회 실패 시
-        }
         return null;
     }
 
@@ -456,12 +421,43 @@
         try {
             let targetId = query;
             
+            // 숫자가 아닌 한글/영어 입력 시 ID 변환
             if (isNaN(query)) {
-                targetId = await findIdByName(query);
-                if (!targetId) {
-                    alert(`'${query}' 포켓몬을 찾을 수 없다로토! 멍멍!`);
-                    resetView(); 
-                    return;
+                // 한글 매핑 검색
+                let cleanQuery = query.trim().replace(/\s+/g, '');
+                
+                if (koreanNameMap[cleanQuery]) {
+                    targetId = koreanNameMap[cleanQuery];
+                } else {
+                    // 서버 검색 시도 (영문명 또는 한글명 찾아내기)
+                    let foundId = null;
+                    
+                    // species 데이터를 통해 한글 이름 탐색
+                    for (let id = 1; id <= TOTAL_POKEMON; id++) {
+                        if (koreanNameMap[cleanQuery]) {
+                            foundId = koreanNameMap[cleanQuery];
+                            break;
+                        }
+                    }
+
+                    // 일치하는 ID를 못 찾았다면 개별 species API 대조
+                    if (!foundId) {
+                        try {
+                            const specRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${encodeURIComponent(cleanQuery.toLowerCase())}`);
+                            if (specRes.ok) {
+                                const specData = await specRes.json();
+                                foundId = specData.id;
+                            }
+                        } catch (e) {}
+                    }
+
+                    if (foundId) {
+                        targetId = foundId;
+                    } else {
+                        alert(`'${query}' 포켓몬을 찾을 수 없다로토! 멍멍!`);
+                        resetView();
+                        return;
+                    }
                 }
             }
 
@@ -475,8 +471,8 @@
             const koreanNameObj = speciesData.names.find(n => n.language.name === 'ko');
             const koreanName = koreanNameObj ? koreanNameObj.name : data.name;
 
+            // 검색용 한글 캐시에 저장
             koreanNameMap[koreanName.replace(/\s+/g, '')] = data.id;
-            idToKoreanName[data.id] = koreanName;
 
             const genusObj = speciesData.genera.find(g => g.language.name === 'ko');
             const genusText = genusObj ? genusObj.genus : "";
@@ -516,6 +512,7 @@
         }
     }
 
+    // 선택창 열기
     async function openGridModal() {
         document.getElementById('grid-modal').style.display = 'flex';
         if (gridLoaded) return;
@@ -590,7 +587,17 @@
         fetchPokemon(currentId);
     }
 
-    initKoreanNameMap();
+    // 주요 포켓몬 미리 한글 캐싱 사전 등록 (피카츄, 리자몽, 나옹, 망나뇽 등)
+    koreanNameMap['피카츄'] = 25;
+    koreanNameMap['이상해씨'] = 1;
+    koreanNameMap['파이리'] = 4;
+    koreanNameMap['꼬부기'] = 7;
+    koreanNameMap['리자몽'] = 6;
+    koreanNameMap['나옹'] = 52;
+    koreanNameMap['망나뇽'] = 149;
+    koreanNameMap['뮤츠'] = 150;
+    koreanNameMap['뮤'] = 151;
+
     fetchPokemon(currentId);
 </script>
 
