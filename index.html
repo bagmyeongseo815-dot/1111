@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>최강 사진 인식 AI 포켓몬 도감 v2</title>
+  <title>스마트로토무 AI 포켓몬 도감</title>
   
-  <!-- TensorFlow.js & MobileNet (무료 AI 사물/포켓몬 인식) -->
+  <!-- TensorFlow.js & MobileNet (무료 AI 인식) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 
@@ -14,10 +14,10 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      font-family: 'Pretendard', -apple-system, sans-serif;
     }
     body {
-      background-color: #181d28;
+      background-color: #12161f;
       color: #ffffff;
       display: flex;
       flex-direction: column;
@@ -29,46 +29,45 @@
     h1 {
       font-size: 22px;
       margin-bottom: 15px;
-      color: #f6ad55;
+      color: #ff7a00;
+      text-shadow: 0 0 10px rgba(255, 122, 0, 0.5);
     }
     
     /* 검색창 영역 */
     .search-box {
       display: flex;
       width: 100%;
-      max-width: 400px;
-      margin-bottom: 15px;
+      max-width: 420px;
+      margin-bottom: 12px;
       gap: 8px;
     }
     .search-box input {
       flex: 1;
       padding: 12px 15px;
       border-radius: 10px;
-      border: 1px solid #3a4759;
-      background-color: #222a38;
-      font-size: 16px;
+      border: 2px solid #ff7a00;
+      background-color: #1a2233;
+      font-size: 15px;
       color: #ffffff;
       outline: none;
-    }
-    .search-box input::placeholder {
-      color: #a0aec0;
     }
     .search-box button {
       padding: 12px 18px;
       border-radius: 10px;
       border: none;
-      background-color: #3182ce;
+      background-color: #ff7a00;
       color: white;
       font-weight: bold;
       font-size: 15px;
       cursor: pointer;
+      box-shadow: 0 0 10px rgba(255, 122, 0, 0.4);
     }
 
-    /* 차별점: 사진 업로드/촬영 메인 버튼 */
+    /* 촬영 / 업로드 버튼 */
     .photo-upload-section {
       width: 100%;
-      max-width: 400px;
-      margin-bottom: 15px;
+      max-width: 420px;
+      margin-bottom: 12px;
     }
     .file-label {
       display: flex;
@@ -76,23 +75,21 @@
       align-items: center;
       gap: 8px;
       width: 100%;
-      padding: 14px 0;
-      background-color: #e53e3e;
+      padding: 12px 0;
+      background: linear-gradient(135deg, #e53e3e, #dd6b20);
       color: white;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
-      border-radius: 12px;
+      border-radius: 10px;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
     }
-    #photoInput {
-      display: none;
-    }
+    #photoInput { display: none; }
 
     /* 웹캠 영역 */
     .camera-section {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -100,15 +97,15 @@
     }
     #webcam-container {
       width: 100%;
-      height: 220px;
+      height: 200px;
       background-color: #0d1117;
-      border-radius: 14px;
+      border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       justify-content: center;
       align-items: center;
-      border: 2px solid #2d3748;
+      border: 2px solid #2b3a55;
     }
     #webcamVideo {
       width: 100% !important;
@@ -118,181 +115,227 @@
 
     .btn-group {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       width: 100%;
     }
     .btn-group button {
       flex: 1;
       padding: 10px 0;
-      border-radius: 10px;
+      border-radius: 8px;
       border: none;
-      background-color: #4a5568;
+      background-color: #2b3a55;
       color: white;
       font-weight: bold;
       font-size: 13px;
       cursor: pointer;
     }
     .btn-group button.active {
-      background-color: #dd6b20;
+      background-color: #ff7a00;
     }
 
-    /* 포켓몬 카드 결과 영역 */
-    .pokemon-card {
+    /* 🔥 스마트로토무 프레임 & 화면 UI 디자인 🔥 */
+    .rotom-device {
       width: 100%;
-      max-width: 400px;
-      background-color: #242c3d;
-      border-radius: 18px;
-      padding: 22px;
+      max-width: 420px;
+      background-color: #d14d11; /* 로토무 오렌지 케이스 */
+      border: 4px solid #f97316;
+      border-radius: 24px;
+      padding: 12px;
+      box-shadow: 0 0 25px rgba(255, 122, 0, 0.3), inset 0 0 10px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    /* 로토무 화면 (푸른 격자 그래픽) */
+    .rotom-screen {
+      background-color: #0b213a;
+      background-image: 
+        linear-gradient(rgba(0, 180, 255, 0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 180, 255, 0.15) 1px, transparent 1px);
+      background-size: 20px 20px;
+      border-radius: 16px;
+      border: 3px solid #1e3a5f;
+      padding: 18px 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-      border: 1px solid #323d52;
+      position: relative;
+      overflow: hidden;
     }
+
+    /* 좌측 하단 로토무 메뉴 아이콘 그래픽 */
+    .rotom-screen::before {
+      content: "● ●";
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      font-size: 12px;
+      color: #38bdf8;
+      letter-spacing: 4px;
+      opacity: 0.7;
+    }
+
+    /* 우측 하단 번호 영역 패널 */
+    .rotom-no-panel {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background-color: #e2e8f0;
+      color: #0f172a;
+      font-weight: 900;
+      font-size: 22px;
+      padding: 6px 18px 4px 18px;
+      border-top-left-radius: 16px;
+      box-shadow: -2px -2px 10px rgba(0,0,0,0.3);
+      border-left: 3px solid #ff7a00;
+      border-top: 3px solid #ff7a00;
+    }
+
     .pokemon-name {
-      font-size: 26px;
-      font-weight: 800;
-      margin-bottom: 5px;
+      font-size: 28px;
+      font-weight: 900;
       color: #ffffff;
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+      margin-bottom: 2px;
     }
-    .pokemon-no {
-      font-size: 18px;
-      font-weight: bold;
-      color: #a0aec0;
-      margin-bottom: 10px;
-    }
+
     .pokemon-img {
-      width: 200px;
-      height: 200px;
+      width: 190px;
+      height: 190px;
       object-fit: contain;
       margin: 10px 0;
-      filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.3));
+      filter: drop-shadow(0px 0px 15px rgba(56, 189, 248, 0.5));
     }
+
     .pokemon-info {
-      font-size: 15px;
-      color: #e2e8f0;
-      margin-bottom: 4px;
-      text-align: center;
+      font-size: 14px;
+      color: #e0f2fe;
+      margin-bottom: 3px;
+      font-weight: 600;
     }
+
     .pokemon-title {
-      font-size: 17px;
+      font-size: 15px;
       font-weight: bold;
-      margin-top: 15px;
+      margin-top: 14px;
       margin-bottom: 6px;
-      color: #f6ad55;
-      border-bottom: 2px solid #3c475d;
+      color: #38bdf8;
+      border-bottom: 2px dashed rgba(56, 189, 248, 0.4);
       width: 100%;
       text-align: center;
-      padding-bottom: 4px;
+      padding-bottom: 2px;
     }
+
     .pokemon-desc {
-      font-size: 14px;
-      color: #cbd5e0;
+      font-size: 13px;
+      color: #bae6fd;
       text-align: center;
-      line-height: 1.6;
-      margin-bottom: 10px;
+      line-height: 1.5;
+      margin-bottom: 35px; /* 하단 번호 패널과의 여백 */
       word-break: keep-all;
     }
 
     /* 능력치 그래프 */
     .stat-box {
       width: 100%;
-      margin-top: 5px;
+      margin-top: 4px;
+      margin-bottom: 10px;
     }
     .stat-row {
       display: flex;
       justify-content: space-between;
-      font-size: 13px;
-      color: #e2e8f0;
-      margin-bottom: 3px;
+      font-size: 12px;
+      color: #e0f2fe;
+      margin-bottom: 2px;
     }
     .stat-bar-bg {
       width: 100%;
-      height: 10px;
-      background-color: #3a4556;
-      border-radius: 5px;
+      height: 8px;
+      background-color: #1e293b;
+      border-radius: 4px;
       overflow: hidden;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+      border: 1px solid #334155;
     }
     .stat-bar-fill {
       height: 100%;
-      background-color: #48bb78;
-      border-radius: 5px;
+      background-color: #38bdf8;
+      border-radius: 4px;
       transition: width 0.5s ease-in-out;
+      box-shadow: 0 0 6px #38bdf8;
     }
 
     #loading {
       display: none;
       margin: 15px 0;
       font-size: 15px;
-      color: #f6ad55;
+      color: #ff7a00;
       font-weight: bold;
     }
 
-    /* 분석용 숨겨진 이미지 엘리먼트 */
-    #hiddenImg {
-      display: none;
-    }
+    #hiddenImg { display: none; }
   </style>
 </head>
 <body>
 
-  <h1>⚡ 포켓몬 AI 도감 v2 ⚡</h1>
+  <h1>📱 스마트로토무 AI 도감 📱</h1>
 
-  <!-- 1. 한글 포켓몬 검색창 -->
+  <!-- 1. 한글 검색 영역 -->
   <div class="search-box">
-    <input type="text" id="searchInput" placeholder="한글 이름 또는 번호 입력" onkeyup="if(window.event.keyCode==13){searchPokemon()}">
+    <input type="text" id="searchInput" placeholder="한글 포켓몬 이름 또는 번호 입력" onkeyup="if(window.event.keyCode==13){searchPokemon()}">
     <button onclick="searchPokemon()">검색</button>
   </div>
 
-  <!-- 2. 차별점: 스마트폰 카메라 촬영 / 앨범 사진 선택 (가장 안전) -->
+  <!-- 2. 스마트폰 카메라 / 앨범 업로드 -->
   <div class="photo-upload-section">
     <label for="photoInput" class="file-label">
-      📸 포켓몬 사진 찍기 / 앨범에서 찾아보기
+      📸 포켓몬 촬영 / 앨범에서 검색
     </label>
     <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(this)">
   </div>
 
-  <!-- 3. 웹캠 실시간 선택 영역 -->
+  <!-- 3. 웹캠 실시간 탐지 -->
   <div class="camera-section">
     <div id="webcam-container">
       <video id="webcamVideo" autoplay playsinline muted></video>
     </div>
     <div class="btn-group">
       <button onclick="startCamera()">카메라 켜기</button>
-      <button onclick="detectWebcamOnce()">📷 웹캠 찰칵 인식</button>
-      <button id="autoBtn" onclick="toggleAutoScan()">🔄 3초 자동스캔</button>
+      <button onclick="detectWebcamOnce()">📷 찰칵 인식</button>
+      <button id="autoBtn" onclick="toggleAutoScan()">🔄 3초 스캔</button>
     </div>
   </div>
 
-  <div id="loading">포켓몬 분석 및 정보 로딩 중... ⚡</div>
+  <div id="loading">로토무 스캔 중... ⚡</div>
 
-  <!-- 4. 포켓몬 카드 출력 영역 -->
-  <div class="pokemon-card" id="card" style="display: none;">
-    <div class="pokemon-name" id="pName">포켓몬</div>
-    <div class="pokemon-no" id="pNo">No.000</div>
-    <img src="" alt="포켓몬" class="pokemon-img" id="pImg">
-    <div class="pokemon-info" id="pType">타입 : -</div>
-    <div class="pokemon-info" id="pHeight">키 : -</div>
-    <div class="pokemon-info" id="pWeight">몸무게 : -</div>
-    
-    <div class="pokemon-title">도감 설명</div>
-    <div class="pokemon-desc" id="pDesc">-</div>
+  <!-- 4. 스마트로토무 디스플레이 영역 -->
+  <div class="rotom-device" id="card" style="display: none;">
+    <div class="rotom-screen">
+      <div class="pokemon-name" id="pName">팬텀</div>
+      <img src="" alt="포켓몬" class="pokemon-img" id="pImg">
+      <div class="pokemon-info" id="pType">타입 : -</div>
+      <div class="pokemon-info" id="pHeight">키 : -</div>
+      <div class="pokemon-info" id="pWeight">몸무게 : -</div>
+      
+      <div class="pokemon-title">도감 설명</div>
+      <div class="pokemon-desc" id="pDesc">-</div>
 
-    <div class="pokemon-title">능력치</div>
-    <div class="stat-box">
-      <div class="stat-row"><span>HP</span><span id="labelHp">0</span></div>
-      <div class="stat-bar-bg"><div class="stat-bar-fill" id="barHp" style="width: 0%;"></div></div>
+      <div class="pokemon-title">능력치</div>
+      <div class="stat-box">
+        <div class="stat-row"><span>HP</span><span id="labelHp">0</span></div>
+        <div class="stat-bar-bg"><div class="stat-bar-fill" id="barHp" style="width: 0%;"></div></div>
 
-      <div class="stat-row"><span>공격 (Attack)</span><span id="labelAttack">0</span></div>
-      <div class="stat-bar-bg"><div class="stat-bar-fill" id="barAttack" style="width: 0%; background-color: #f56565;"></div></div>
+        <div class="stat-row"><span>공격</span><span id="labelAttack">0</span></div>
+        <div class="stat-bar-bg"><div class="stat-bar-fill" id="barAttack" style="width: 0%; background-color: #f43f5e;"></div></div>
 
-      <div class="stat-row"><span>방어 (Defense)</span><span id="labelDefense">0</span></div>
-      <div class="stat-bar-bg"><div class="stat-bar-fill" id="barDefense" style="width: 0%; background-color: #4299e1;"></div></div>
+        <div class="stat-row"><span>방어</span><span id="labelDefense">0</span></div>
+        <div class="stat-bar-bg"><div class="stat-bar-fill" id="barDefense" style="width: 0%; background-color: #3b82f6;"></div></div>
+      </div>
+
+      <!-- 우측 하단 로토무 번호 패널 -->
+      <div class="rotom-no-panel" id="pNo">094</div>
     </div>
   </div>
 
-  <!-- 사진 분석용 내부 태그 -->
   <img id="hiddenImg" alt="hidden">
 
   <script>
@@ -302,13 +345,30 @@
     let isAutoScanning = false;
     let lastScanTime = 0;
 
-    // AI 엔진 로드
     async function loadAIModel() {
       aiModel = await mobilenet.load();
     }
     loadAIModel();
 
-    // 1. [핵심 기능] 사진 파일 업로드/촬영 처리
+    function translateAiToPokemon(predictions) {
+      if (!predictions || predictions.length === 0) return "피카츄";
+      const resultText = predictions.map(p => p.className.toLowerCase()).join(" ");
+      
+      if (resultText.includes("dragon") || resultText.includes("lizard") || resultText.includes("dinosaur")) {
+        return "망나뇽";
+      } else if (resultText.includes("mouse") || resultText.includes("yellow") || resultText.includes("electric")) {
+        return "피카츄";
+      } else if (resultText.includes("turtle") || resultText.includes("tortoise")) {
+        return "꼬북이";
+      } else if (resultText.includes("cat") || resultText.includes("tiger")) {
+        return "나옹";
+      } else if (resultText.includes("bear") || resultText.includes("teddy")) {
+        return "잠만보";
+      } else {
+        return "피카츄";
+      }
+    }
+
     async function handlePhotoUpload(input) {
       if (input.files && input.files[0]) {
         const loading = document.getElementById("loading");
@@ -321,12 +381,10 @@
           imgEl.onload = async function () {
             if (aiModel) {
               const predictions = await aiModel.classify(imgEl);
-              if (predictions && predictions.length > 0) {
-                // 사진에서 알아서 분석 후 포켓몬 불러오기
-                fetchPokemonV2("망나뇽");
-              }
+              const matchedName = translateAiToPokemon(predictions);
+              fetchPokemonV2(matchedName);
             } else {
-              fetchPokemonV2("망나뇽");
+              fetchPokemonV2("피카츄");
             }
           };
         };
@@ -334,7 +392,6 @@
       }
     }
 
-    // 2. 웹캠 켜기
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
@@ -345,94 +402,86 @@
       }
     }
 
-    // 3. 웹캠 1회 찰칵 인식
     async function detectWebcamOnce() {
       if (!isCameraOn) {
-        alert("먼저 [카메라 켜기] 버튼을 누르거나 위의 [사진 찍기] 버튼을 사용해보세요!");
+        alert("카메라를 먼저 켜주세요!");
         return;
       }
       if (aiModel) {
         const predictions = await aiModel.classify(video);
-        fetchPokemonV2("망나뇽");
+        const matchedName = translateAiToPokemon(predictions);
+        fetchPokemonV2(matchedName);
       }
     }
 
-    // 4. 안전한 3초 쿨다운 자동 스캔
     function toggleAutoScan() {
       if (!isCameraOn) {
-        alert("먼저 [카메라 켜기] 버튼을 눌러주세요!");
+        alert("카메라를 먼저 켜주세요!");
         return;
       }
       isAutoScanning = !isAutoScanning;
       const btn = document.getElementById("autoBtn");
       
       if (isAutoScanning) {
-        btn.innerText = "🔄 자동 인식 중...";
+        btn.innerText = "🔄 스캔 중...";
         btn.classList.add("active");
         safeAutoLoop();
       } else {
-        btn.innerText = "🔄 3초 자동스캔";
+        btn.innerText = "🔄 3초 스캔";
         btn.classList.remove("active");
       }
     }
 
     async function safeAutoLoop() {
       if (!isAutoScanning) return;
-
       const now = Date.now();
-      // 3초 간격 쿨다운으로 기계 과열 100% 방지!
       if (now - lastScanTime > 3000 && aiModel) {
         lastScanTime = now;
         const predictions = await aiModel.classify(video);
-        fetchPokemonV2("망나뇽");
+        const matchedName = translateAiToPokemon(predictions);
+        fetchPokemonV2(matchedName);
       }
-
       requestAnimationFrame(safeAutoLoop);
     }
 
-    // 5. 검색창 수동 검색
     function searchPokemon() {
       const query = document.getElementById("searchInput").value;
       if (!query) {
-        alert("포켓몬 이름이나 번호를 입력해주세요!");
+        alert("포켓몬 이름을 입력하세요!");
         return;
       }
       fetchPokemonV2(query);
     }
 
-    // 6. PokéAPI v2 전체 포켓몬 한글 자동 변환 불러오기
+    // [1025마리 한글 정밀 탐색]
     async function fetchPokemonV2(query) {
       const loading = document.getElementById("loading");
       loading.style.display = "block";
 
       try {
-        let cleanQuery = query.trim().toLowerCase();
+        let cleanQuery = query.trim().replace(/\s+/g, "").toLowerCase();
         let targetIdOrName = cleanQuery;
 
         if (isNaN(cleanQuery)) {
-          const searchRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${encodeURIComponent(cleanQuery)}`);
-          
-          if (!searchRes.ok) {
-            const fallbackMap = {
-              "이상해씨":"bulbasaur", "파이리":"charmander", "리자몽":"charizard", "꼬북이":"squirtle",
-              "거북왕":"blastoise", "피카츄":"pikachu", "라이츄":"raichu", "푸린":"jigglypuff",
-              "고우스트":"haunter", "팬텀":"gengar", "이브이":"eevee", "잠만보":"snorlax",
-              "망나뇽":"dragonite", "뮤츠":"mewtwo", "뮤":"mew", "루기아":"lugia", "칠색조":"ho-oh",
-              "레쿠쟈":"rayquaza", "개굴닌자":"greninja", "나옹":"meowth", "고라파덕":"psyduck"
-            };
-            if (fallbackMap[cleanQuery]) {
-              targetIdOrName = fallbackMap[cleanQuery];
+          try {
+            const searchRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${encodeURIComponent(cleanQuery)}`);
+            if (searchRes.ok) {
+              const speciesInfo = await searchRes.json();
+              targetIdOrName = speciesInfo.id;
             } else {
-              throw new Error("포켓몬을 찾을 수 없습니다.");
+              targetIdOrName = await findPokemonIdByName(cleanQuery);
             }
-          } else {
-            const speciesInfo = await searchRes.json();
-            targetIdOrName = speciesInfo.id;
+          } catch (e) {
+            targetIdOrName = await findPokemonIdByName(cleanQuery);
           }
         }
 
+        if (!targetIdOrName) {
+          throw new Error("포켓몬을 찾을 수 없습니다.");
+        }
+
         const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${targetIdOrName}`);
-        if (!res.ok) throw new Error("포켓몬 정보를 불러오지 못했습니다.");
+        if (!res.ok) throw new Error("포켓몬 정보 로딩 실패");
         const data = await res.json();
 
         const speciesRes = await fetch(data.species.url);
@@ -470,18 +519,36 @@
         renderCard(pokemon);
 
       } catch (err) {
-        alert("포켓몬 정보를 찾을 수 없습니다!");
+        alert(`'${query}' 포켓몬을 찾지 못했습니다. 이름을 다시 확인해 주세요!`);
         console.error(err);
       } finally {
         loading.style.display = "none";
       }
     }
 
-    // 7. 카드 출력 함수
+    async function findPokemonIdByName(korName) {
+      for (let id = 1; id <= 1025; id++) {
+        try {
+          const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
+          if (res.ok) {
+            const data = await res.json();
+            const koObj = data.names.find(n => n.language.name === "ko");
+            if (koObj && koObj.name.replace(/\s+/g, "").toLowerCase() === korName) {
+              return id;
+            }
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+      return null;
+    }
+
     function renderCard(p) {
-      document.getElementById("card").style.display = "flex";
+      document.getElementById("card").style.display = "block";
       document.getElementById("pName").innerText = p.name;
-      document.getElementById("pNo").innerText = "No." + String(p.id).padStart(3, '0');
+      // 3자리 숫자 포맷 (예: 094)
+      document.getElementById("pNo").innerText = String(p.id).padStart(3, '0');
       document.getElementById("pImg").src = p.image;
       document.getElementById("pType").innerText = "타입 : " + p.types;
       document.getElementById("pHeight").innerText = "키 : " + p.height;
