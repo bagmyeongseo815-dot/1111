@@ -32,17 +32,16 @@
             overflow: hidden;
         }
 
-        /* 📺 2. bg.png 이미지의 '내부 화면' 위치에 딱 맞춘 디스플레이 영역 */
+        /* 📺 2. bg.png 이미지의 '내부 화면' 위치 (검정 배경/테두리 삭제 완료!) */
         .rotom-screen {
             position: absolute;
             top: 45px;
             left: 140px;
             right: 140px;
             bottom: 40px;
-            background: rgba(15, 23, 42, 0.85);
-            border-radius: 16px;
-            border: 2px solid rgba(0, 210, 211, 0.4);
-            backdrop-filter: blur(8px);
+            background: transparent; /* ⚡ 검정 투명 배경 제거! */
+            border: none;             /* ⚡ 테두리 제거! */
+            backdrop-filter: none;    /* ⚡ 블러 효과 제거! */
             padding: 15px;
             display: flex;
             flex-direction: column;
@@ -64,8 +63,8 @@
         .search-input {
             padding: 6px 14px;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(0, 0, 0, 0.5);
             color: white;
             outline: none;
             font-size: 0.85rem;
@@ -73,7 +72,7 @@
             width: 180px;
         }
 
-        .search-input::placeholder { color: #aaa; }
+        .search-input::placeholder { color: #ddd; }
 
         .btn-style {
             background: #f1c40f;
@@ -156,8 +155,8 @@
 
         /* 도감 설명 박스 */
         .description-box {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px;
             padding: 8px 12px;
             margin-top: 6px;
@@ -190,8 +189,8 @@
         }
 
         .btn {
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             color: white;
             padding: 5px 18px;
             border-radius: 20px;
@@ -201,7 +200,7 @@
         }
 
         .btn:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
         }
 
@@ -223,7 +222,7 @@
             color: #00d2d3;
         }
 
-        /* 🎴 화면 내부에 딱 떨어지는 선택창 */
+        /* 🎴 선택창 모달 */
         .grid-modal {
             display: none;
             position: absolute;
@@ -368,9 +367,9 @@
 <script>
     let currentId = 1;
     let fullTextToSpeech = "";
-    const TOTAL_POKEMON = 1025; // ⚡ 1025마리 전 포켓몬 범위 지정!
-    let koreanNameMap = {};     // 한글 이름 -> ID 매핑 백과사전
-    let idToKoreanName = {};    // ID -> 한글 이름 매핑 백과사전
+    const TOTAL_POKEMON = 1025;
+    let koreanNameMap = {};
+    let idToKoreanName = {};
     let isMapReady = false;
     let gridLoaded = false;
 
@@ -395,18 +394,14 @@
         fairy: { name: '페어리', color: '#EE99AC' }
     };
 
-    // 🔍 1. 한글 이름으로 ID 찾는 엔진
     async function initKoreanNameMap() {
         if (isMapReady) return;
         try {
-            // species 데이터를 불러와 한글 이름을 매핑
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species?limit=${TOTAL_POKEMON}`);
             const data = await res.json();
             
-            // 번역 매핑은 빠른 검색을 위해 백그라운드에서 전체 이름 정보를 빌드
             data.results.forEach((item, index) => {
                 const id = index + 1;
-                // 기본값으로 설정해두고 개별 호출시 한글명 교체
             });
             isMapReady = true;
         } catch (e) {
@@ -414,25 +409,20 @@
         }
     }
 
-    // 한글 입력검색 처리 함수
     async function findIdByName(nameQuery) {
         const cleanQuery = nameQuery.trim().replace(/\s+/g, '');
         
-        // 캐시된 한글 맵에서 먼저 조회
         if (koreanNameMap[cleanQuery]) {
             return koreanNameMap[cleanQuery];
         }
 
-        // 맵에 없으면 직접 species API에서 검색 시도
         try {
-            // 입력된 포켓몬 번호/이름 직접 탐색
             for (let id = 1; id <= TOTAL_POKEMON; id++) {
                 if (idToKoreanName[id] && idToKoreanName[id].replace(/\s+/g, '') === cleanQuery) {
                     return id;
                 }
             }
 
-            // 개별 species 호출을 통한 정확한 한글명 매칭
             const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${cleanQuery.toLowerCase()}`);
             if (speciesRes.ok) {
                 const sData = await speciesRes.json();
@@ -459,7 +449,6 @@
         if (fullTextToSpeech) speakText(fullTextToSpeech);
     }
 
-    // ⚡ 포켓몬 조회 메인 함수
     async function fetchPokemon(query) {
         document.getElementById('loader').style.display = 'block';
         document.getElementById('pokemon-data').style.display = 'none';
@@ -467,7 +456,6 @@
         try {
             let targetId = query;
             
-            // 숫자가 아니면 한글/영문 이름 검색 실행
             if (isNaN(query)) {
                 targetId = await findIdByName(query);
                 if (!targetId) {
@@ -487,7 +475,6 @@
             const koreanNameObj = speciesData.names.find(n => n.language.name === 'ko');
             const koreanName = koreanNameObj ? koreanNameObj.name : data.name;
 
-            // 한글 이름 사전 캐싱
             koreanNameMap[koreanName.replace(/\s+/g, '')] = data.id;
             idToKoreanName[data.id] = koreanName;
 
@@ -529,7 +516,6 @@
         }
     }
 
-    // 🎴 1025마리 선택창 그리드
     async function openGridModal() {
         document.getElementById('grid-modal').style.display = 'flex';
         if (gridLoaded) return;
@@ -538,14 +524,12 @@
         gridContainer.innerHTML = '<p style="color:white; width:100%; text-align:center;">1025마리 포켓몬 목록 분석 중이다로토! ⚡</p>';
 
         try {
-            // 처음 151마리부터 빠르게 렌더링 후 스크롤 지원
             gridContainer.innerHTML = '';
 
             for (let id = 1; id <= 151; id++) {
                 createGridCard(id, gridContainer);
             }
 
-            // 151마리 우선 표시 후 나머지 1025마리까지 지연 로딩
             setTimeout(() => {
                 for (let id = 152; id <= TOTAL_POKEMON; id++) {
                     createGridCard(id, gridContainer);
@@ -606,7 +590,6 @@
         fetchPokemon(currentId);
     }
 
-    // 초기화
     initKoreanNameMap();
     fetchPokemon(currentId);
 </script>
