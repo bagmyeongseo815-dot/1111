@@ -460,7 +460,7 @@
     }
 
     // 🌴 폼 클릭 시 해당 폼 고유의 이미지, 타입, 도감 설명 로드
-    async function fetchFormDetail(formUrl, formName, baseKoreanName, genusText, defaultDescription) {
+    async function fetchFormDetail(formUrl, formName, baseKoreanName, genusText, defaultDescription, isUserClick = false) {
         try {
             const res = await fetch(formUrl);
             const data = await res.json();
@@ -508,9 +508,13 @@
             document.getElementById('poke-name').innerText = displayName;
             document.getElementById('poke-description').innerText = formDescription;
 
-            // 음성 읽기 갱신 및 출력
+            // 음성 텍스트 업데이트
             fullTextToSpeech = `${displayName}. ${genusText}. ${formDescription}`;
-            speakText(fullTextToSpeech);
+
+            // 💡 [수정 완료] 사용자가 직접 폼 버튼을 눌렀을 때만 음성을 출력하도록 설정 (자동재생 오류 방지)
+            if (isUserClick) {
+                speakText(fullTextToSpeech);
+            }
 
         } catch (e) {
             console.error(e);
@@ -565,7 +569,8 @@
                     btn.className = 'form-btn';
                     btn.innerText = formatFormName(v.pokemon.name);
                     btn.dataset.formName = v.pokemon.name;
-                    btn.onclick = () => fetchFormDetail(v.pokemon.url, v.pokemon.name, koreanName, genusText, description);
+                    // 💡 버튼 클릭 시 true를 넘겨서 직접 클릭했을 때만 음성 재생!
+                    btn.onclick = () => fetchFormDetail(v.pokemon.url, v.pokemon.name, koreanName, genusText, description, true);
                     formsContainer.appendChild(btn);
                 });
             }
@@ -577,10 +582,10 @@
             document.getElementById('loader').style.display = 'none';
             document.getElementById('pokemon-data').style.display = 'flex';
 
-            // 기본 폼으로 우선 로드
+            // 기본 폼으로 우선 로드 (이때는 음성 자동재생 안 함)
             const defaultVariety = currentVarieties.find(v => v.is_default) || currentVarieties[0];
             if (defaultVariety) {
-                fetchFormDetail(defaultVariety.pokemon.url, defaultVariety.pokemon.name, koreanName, genusText, description);
+                fetchFormDetail(defaultVariety.pokemon.url, defaultVariety.pokemon.name, koreanName, genusText, description, false);
             }
 
         } catch (error) {
