@@ -388,7 +388,7 @@
     const TOTAL_POKEMON = 1025;
     let koreanNameMap = {};
     let gridLoaded = false;
-    let currentVarieties = []; // 현재 포켓몬의 폼/리전폼 목록
+    let currentVarieties = [];
 
     const typeTranslations = {
         normal: { name: '노말', color: '#A8A878' },
@@ -411,7 +411,6 @@
         fairy: { name: '페어리', color: '#EE99AC' }
     };
 
-    // 폼 이름을 예쁜 한글 라벨로 변환 (알로라, 가라르, 히스이 등)
     function formatFormName(name) {
         if (name.includes('-alola')) return '알로라폼';
         if (name.includes('-galar')) return '가라르폼';
@@ -460,8 +459,8 @@
         if (fullTextToSpeech) speakText(fullTextToSpeech);
     }
 
-    // 🌴 특정 폼(알로라, 가라르 등) 데이터로 화면 갱신
-    async function fetchFormDetail(formUrl, formName, baseKoreanName, genusText, description) {
+    // 🌴 폼 클릭 시 해당 폼 고유의 이미지, 타입, 도감 설명 로드
+    async function fetchFormDetail(formUrl, formName, baseKoreanName, genusText, defaultDescription) {
         try {
             const res = await fetch(formUrl);
             const data = await res.json();
@@ -490,12 +489,27 @@
                 btn.classList.toggle('active', btn.dataset.formName === formName);
             });
 
-            // 이름 표기 (알로라 등 붙여주기)
+            // 폼 맞춤형 한국어 설명 로드
+            let formDescription = defaultDescription;
+            if (data.species && data.species.url) {
+                try {
+                    const speciesRes = await fetch(data.species.url);
+                    const speciesData = await speciesRes.json();
+                    const flavorObj = speciesData.flavor_text_entries.find(f => f.language.name === 'ko');
+                    if (flavorObj) {
+                        formDescription = flavorObj.flavor_text.replace(/[\n\f\r]/g, " ");
+                    }
+                } catch(e) {}
+            }
+
+            // 이름 표기 (알로라폼 등)
             const label = formatFormName(formName);
             const displayName = label === '기존 모습' ? baseKoreanName : `${baseKoreanName} (${label})`;
             document.getElementById('poke-name').innerText = displayName;
+            document.getElementById('poke-description').innerText = formDescription;
 
-            fullTextToSpeech = `${displayName}. ${genusText}. ${description}`;
+            // 음성 읽기 갱신 및 출력
+            fullTextToSpeech = `${displayName}. ${genusText}. ${formDescription}`;
             speakText(fullTextToSpeech);
 
         } catch (e) {
